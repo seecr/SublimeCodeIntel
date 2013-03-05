@@ -284,7 +284,8 @@ def autocomplete(view, timeout, busy_timeout, preemptive=False, args=[], kwargs=
             next = content[pos].strip()
         except IndexError:
             next = ''
-        if pos and content and content[view.line(sel).begin():pos].strip() and not next.isalnum() and next != '_':
+        line = content[view.line(sel).begin():pos].strip()
+        if pos and content and line and not next.isalnum() and next != '_':
             # TODO: For the sentinel to work, we need to send a prefix to the completions...
             # but no show_completions() currently available.
             # pos = sentinel[id] if sentinel[id] is not None else view.sel()[0].end()
@@ -295,7 +296,7 @@ def autocomplete(view, timeout, busy_timeout, preemptive=False, args=[], kwargs=
                 if cplns:
                     # Show autocompletions:
                     _completions = sorted(
-                        [('%s  (%s)' % (name, type), name + ('(${1})' if type == 'function' else '')) for type, name in cplns],
+                        [('%s  (%s)' % (name, type), name + ('(${1})' if type == 'function' and not 'import' in line else '')) for type, name in cplns],
                         cmp=lambda a, b: a[1] < b[1] if a[1].startswith('_') and b[1].startswith('_') else False if a[1].startswith('_') else True if b[1].startswith('_') else a[1] < b[1]
                     )
                     if _completions:
