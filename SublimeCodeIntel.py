@@ -300,7 +300,8 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
         text = view.substr(sublime.Region(lpos, pos + 1))
         next = text[-1] if len(text) == pos + 1 - lpos else None
 
-        if not next or next != '_' and not next.isalnum():
+        line = content[view.line(sel).begin():pos].strip()
+        if line and not next or next != '_' and not next.isalnum():
             vid = view.id()
             content = view.substr(sublime.Region(0, view.size()))
 
@@ -312,8 +313,8 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
                 if cplns is not None:
                     function = None if 'import ' in text else 'function'
                     _completions = sorted(
-                        [('%s  (%s)' % (n, t), n + ('($0)' if t == function else '')) for t, n in cplns],
-                        cmp=lambda a, b: cmp(a[1], b[1]) if a[1].startswith('_') == b[1].startswith('_') else 1 if a[1].startswith('_') else -1
+                        [('%s  (%s)' % (n, t), n + ('($0)' if t == function and not 'import' in line else '')) for t, n in cplns],
+                        cmp=lambda a, b: a[1] < b[1] if a[1].startswith('_') and b[1].startswith('_') else False if a[1].startswith('_') else True if b[1].startswith('_') else a[1] < b[1]
                     )
                     if _completions:
                         # Show autocompletions:

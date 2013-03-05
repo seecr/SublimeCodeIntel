@@ -278,6 +278,9 @@ class PythonImportsEvaluator(Evaluator):
                                         log.warn(
                                             "%s (skipping members for %s)",
                                             ex, e)
+                                if e.tag == 'import':
+                                    if 'symbol' in e.attrib:
+                                        cplns.append((e.tag, e.attrib['symbol']))
                     if cplns:
                         break
                 if cplns:
