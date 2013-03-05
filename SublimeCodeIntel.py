@@ -343,7 +343,8 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
                                         var = var.split(' ')[1]
                                     if var[0] == '$':
                                         var = var[1:]
-                                    snippet.append('${%s:%s}' % (i + 1, var))
+                                    snippetStr = "%s%s" % (('${' + str(i) + '/(.+)/, /}') if i > 1 else '', '${' + str(i) + ':' + var + '}') 
+                                    snippet.append(snippetStr)
                                 view.run_command('insert_snippet', {'contents': ', '.join(snippet)})
             codeintel(view, path, content, lang, pos, forms, _trigger)
     # If it's a fill char, queue using lower values and preemptive behavior
