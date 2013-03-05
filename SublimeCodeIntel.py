@@ -330,14 +330,15 @@ def autocomplete(view, timeout, busy_timeout, preemptive=False, args=[], kwargs=
                                 p = p.split(' ')[1]
 
                             var = p.replace('$', '').strip()
-                            snippet.append('${' + str(i) + ':' + var + '}')
+                            snippetStr = "%s%s" % (('${' + str(i) + '/(.+)/, /}') if i > 1 else '', '${' + str(i) + ':' + var + '}') 
+                            snippet.append(snippetStr)
                             i += 1
 
                         if i == 1:
                             return
 
                         view.run_command('insert_snippet', {
-                            'contents': ', '.join(snippet)
+                            'contents': ''.join(snippet)
                         })
 
             sentinel[id] = None
