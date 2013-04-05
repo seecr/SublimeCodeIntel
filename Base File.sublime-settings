@@ -13,6 +13,8 @@
     // An array of language names which are disabled.
     "codeintel_disabled_languages":
     [
+        "Java",
+        "JavaScript"
     ],
 
     /*
@@ -26,6 +28,8 @@
     // An array of language names to disable.
     "codeintel_live_disabled_languages":
     [
+        "Java",
+        "JavaScript"
     ],
 
     /*

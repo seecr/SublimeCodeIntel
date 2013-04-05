@@ -1136,3 +1136,27 @@ class SublimecodeintelEnableLiveLangCommand(SublimecodeintelLiveCommand):
 class SublimecodeintelDisableLiveLangCommand(SublimecodeintelLiveCommand):
     def is_enabled(self):
         return super(SublimecodeintelDisableLiveLangCommand, self).is_enabled(True, True)
+
+class ShowPythonDefinition(sublime_plugin.TextCommand):
+    def run(self, edit, block=False):
+        view = self.view
+        path = view.file_name()
+        lang = guess_lang(view, path)
+        if not lang:
+            return
+        def _autocomplete_callback(view, path, lang):
+            id = view.id()
+            content = view.substr(sublime.Region(0, view.size()))
+            sel = view.sel()[0]
+            pos = sel.end()
+            if pos:
+                def _trigger(cplns, calltips):
+                    if calltips is not None:
+                        # Trigger a tooltip
+                        calltip(view, 'tip', calltips[0])
+
+                sentinel[id] = None
+                codeintel(view, path, content, lang, pos, ('cplns', 'calltips'), _trigger)
+        _autocomplete_callback(view, path, lang)
+        # If it's a fill char, queue using lower values and preemptive behavior
+        # queue(view, _autocomplete_callback, 0, 0, True, args=[path, lang], kwargs={})
