@@ -329,6 +329,7 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
                 if calltips is not None:
                     # Trigger a tooltip
                     calltip(view, 'tip', calltips[0])
+<<<<<<< HEAD
                     # Insert function call snippets:
                     if view_settings.get('codeintel_snippets', True):
                         # Insert parameters as snippet:
@@ -337,7 +338,11 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
                             params = [p.strip() for p in m.group(1).split(',')] if m else None
                             if params:
                                 snippet = []
+                                _completions = []
                                 for i, p in enumerate(params):
+                                    p = p.strip()
+                                    argname = p.split('=')[0]
+                                    _completions.append((argname, argname))
                                     var, _, _ = p.partition('=')
                                     if ' ' in var:
                                         var = var.split(' ')[1]
@@ -345,6 +350,7 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
                                         var = var[1:]
                                     snippetStr = "%s%s" % (('${' + str(i) + '/(.+)/, /}') if i > 1 else '', '${' + str(i) + ':' + var + '}') 
                                     snippet.append(snippetStr)
+                                completions[id] = _completions
                                 view.run_command('insert_snippet', {'contents': ', '.join(snippet)})
             codeintel(view, path, content, lang, pos, forms, _trigger)
     # If it's a fill char, queue using lower values and preemptive behavior
