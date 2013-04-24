@@ -318,32 +318,34 @@ def autocomplete(view, timeout, busy_timeout, preemptive=False, args=[], kwargs=
                     # Trigger a tooltip
                     calltip(view, 'tip', calltips[0])
 
+                    rex = re.compile("\(([^\[\(\)]*)")
+                    m = rex.search(calltips[0])
+
+                    if m is None:
+                        return
+
+                    params = m.group(1).split(',')
+
+                    snippet = []
+                    i = 1
+                    _completions = []
+                    for p in params:
+                        p = p.strip()
+                        argname = p.split('=')[0]
+                        _completions.append((argname, argname))
+                        if p.find('=') != -1:
+                            continue
+                        if p.find(' ') != -1:
+                            p = p.split(' ')[1]
+
+                        var = p.replace('$', '').strip()
+                        snippetStr = "%s%s" % (('${' + str(i) + '/(.+)/, /}') if i > 1 else '', '${' + str(i) + ':' + var + '}') 
+                        snippet.append(snippetStr)
+                        i += 1
+                    completions[id] = _completions
+                    if i == 1:
+                        return
                     if content[sel.a - 1] == '(' and content[sel.a] == ')':
-                        rex = re.compile("\(([^\[\(\)]*)")
-                        m = rex.search(calltips[0])
-
-                        if m is None:
-                            return
-
-                        params = m.group(1).split(',')
-
-                        snippet = []
-                        i = 1
-                        for p in params:
-                            p = p.strip()
-                            if p.find('=') != -1:
-                                continue
-                            if p.find(' ') != -1:
-                                p = p.split(' ')[1]
-
-                            var = p.replace('$', '').strip()
-                            snippetStr = "%s%s" % (('${' + str(i) + '/(.+)/, /}') if i > 1 else '', '${' + str(i) + ':' + var + '}') 
-                            snippet.append(snippetStr)
-                            i += 1
-
-                        if i == 1:
-                            return
-
                         view.run_command('insert_snippet', {
                             'contents': ''.join(snippet)
                         })
