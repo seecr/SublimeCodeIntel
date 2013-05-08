@@ -332,7 +332,7 @@ def autocomplete(view, timeout, busy_timeout, preemptive=False, args=[], kwargs=
                     for p in params:
                         p = p.strip()
                         argname = p.split('=')[0]
-                        _completions.append((argname, argname))
+                        _completions.append((argname + ' (argument)', argname))
                         if p.find('=') != -1:
                             continue
                         if p.find(' ') != -1:
