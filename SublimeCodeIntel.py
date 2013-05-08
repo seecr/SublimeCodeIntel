@@ -329,7 +329,6 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
                 if calltips is not None:
                     # Trigger a tooltip
                     calltip(view, 'tip', calltips[0])
-<<<<<<< HEAD
                     # Insert function call snippets:
                     if view_settings.get('codeintel_snippets', True):
                         # Insert parameters as snippet:
@@ -342,7 +341,7 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
                                 for i, p in enumerate(params):
                                     p = p.strip()
                                     argname = p.split('=')[0]
-                                    _completions.append((argname, argname))
+                                    _completions.append((argname + ' (argument)', argname))
                                     var, _, _ = p.partition('=')
                                     if ' ' in var:
                                         var = var.split(' ')[1]
