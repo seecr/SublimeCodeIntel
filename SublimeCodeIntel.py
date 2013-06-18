@@ -1028,7 +1028,6 @@ class CodeIntelAutoComplete(sublime_plugin.TextCommand):
         if lang:
             autocomplete(view, 0, 0, ('calltips', 'cplns'), True, args=[path, lang])
 
-
 class GotoPythonDefinition(sublime_plugin.TextCommand):
     def run(self, edit, block=False):
         view = self.view
@@ -1256,3 +1255,53 @@ class ShowPythonDefinition(sublime_plugin.TextCommand):
         _autocomplete_callback(view, path, lang)
         # If it's a fill char, queue using lower values and preemptive behavior
         # queue(view, _autocomplete_callback, 0, 0, True, args=[path, lang], kwargs={})
+
+class GotoClass(sublime_plugin.WindowCommand):
+    def run(self, x='', openFile=False):
+        def _openDefns(defns):
+            if not defns:
+                return
+            defn = defns[0]
+            path = defn.path + ':' + str(defn.line)
+            self.window.open_file(path, sublime.ENCODED_POSITION)
+
+        def _showCplns(cplns):
+            if not cplns:
+                return
+            items = ['..'] if x else []
+            items += ["%s (%s)" % (c[1], c[0]) for c in cplns]
+            def onDone(i):
+                if i == -1: return
+                if items[i] == '..': self.gotoParentModule(x)
+                else: self.gotoSubModule(x, cplns[i - 1] if x else cplns[i])
+            self.window.show_quick_panel(items, lambda i: onDone(i))
+
+        if not x:
+            codeintel(self.window.active_view(), None, 'from ', u"Python", 5, ('cplns',), _showCplns)
+        else:
+            if openFile:
+                # codeintel_scan(self.window.active_view(), None, x, u"Python")
+                mgr = codeintel_manager()
+                buf = mgr.buf_from_content(x.encode('utf-8'), u"Python", None, "<Unsaved>", 'utf-8')
+                buf.scan()
+
+                codeintel(self.window.active_view(), None, x, u"Python", len(x) - 1, ('defns',), _openDefns)
+            else:
+                codeintel(self.window.active_view(), None, 'from %s import ' % x, u"Python", 13 + len(x), ('cplns', ), _showCplns)
+
+    def gotoSubModule(self, module, cplns):
+        if not module or cplns[0] == 'module':
+            x = module
+            if x: x+='.'
+            x += cplns[1]
+            openFile = False
+        else:
+            x = 'from %s import %s' % (module, cplns[1])
+            openFile = True
+        self.window.run_command('goto_class', {'x': x, 'openFile': openFile})
+
+    def gotoParentModule(self, module):
+        parent = module.rsplit('.')[0]
+        if parent == module:
+            parent = ''
+        self.window.run_command('goto_class', {'x': parent, 'openFile': False})
