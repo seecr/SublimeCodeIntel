@@ -314,7 +314,7 @@ def autocomplete(view, timeout, busy_timeout, preemptive=False, args=[], kwargs=
                             'next_completion_if_showing': False,
                             'auto_complete_commit_on_tab': True,
                         })
-                elif calltips is not None and False:
+                elif calltips is not None:
                     # Trigger a tooltip
                     calltip(view, 'tip', calltips[0])
 
@@ -791,8 +791,8 @@ def codeintel(view, path, content, lang, pos, forms, callback=None, timeout=7000
             print >>condeintel_log_file, msg
 
             def _callback():
-                if view.line(view.sel()[0]) == view.line(pos):
-                    callback(*ret)
+                # if view.line(view.sel()[0]) == view.line(pos):
+                callback(*ret)
             logger(view, 'info', "")
             sublime.set_timeout(_callback, 0)
         else:
@@ -1201,7 +1201,9 @@ class GotoClass(sublime_plugin.WindowCommand):
         else:
             if openFile:
                 # codeintel_scan(self.window.active_view(), None, x, u"Python")
-                mgr = codeintel_manager()
+                folders = getattr(self.window, 'folders', lambda: [])()  # FIXME: it's like this for backward compatibility (<= 2060)
+                folders_id = str(hash(frozenset(folders)))
+                mgr = codeintel_manager(folders_id)
                 buf = mgr.buf_from_content(x.encode('utf-8'), u"Python", None, "<Unsaved>", 'utf-8')
                 buf.scan()
 
@@ -1221,7 +1223,7 @@ class GotoClass(sublime_plugin.WindowCommand):
         self.window.run_command('goto_class', {'x': x, 'openFile': openFile})
 
     def gotoParentModule(self, module):
-        parent = module.rsplit('.')[0]
+        parent = module.rsplit('.', 1)[0]
         if parent == module:
             parent = ''
         self.window.run_command('goto_class', {'x': parent, 'openFile': False})
