@@ -300,10 +300,10 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
         text = view.substr(sublime.Region(lpos, pos + 1))
         next = text[-1] if len(text) == pos + 1 - lpos else None
 
+        content = view.substr(sublime.Region(0, view.size()))
         line = content[view.line(sel).begin():pos].strip()
         if line and not next or next != '_' and not next.isalnum():
             vid = view.id()
-            content = view.substr(sublime.Region(0, view.size()))
 
             def _trigger(calltips, cplns=None):
                 view_settings = view.settings()
@@ -332,25 +332,27 @@ def autocomplete(view, timeout, busy_timeout, forms, preemptive=False, args=[], 
                     # Insert function call snippets:
                     if view_settings.get('codeintel_snippets', True):
                         # Insert parameters as snippet:
+                        m = re.search(r'\(([^\[\(\)]*)', calltips[0])
+                        params = [p.strip() for p in m.group(1).split(',')] if m else None
+                        if params:
+                            snippet = []
+                            _completions = []
+                            for i, p in enumerate(params):
+                                p = p.strip()
+                                argname = p.split('=')[0]
+                                _completions.append((argname + ' (argument)', argname))
+                                if p.find('=') != -1:
+                                    continue
+                                var, _, _ = p.partition('=')
+                                if ' ' in var:
+                                    var = var.split(' ')[1]
+                                if var[0] == '$':
+                                    var = var[1:]
+                                snippetStr = "%s%s" % (('${' + str(i+1) + '/(.+)/, /}') if i > 0 else '', '${' + str(i+1) + ':' + var + '}')
+                                snippet.append(snippetStr)
+                            completions[vid] = _completions
                         if content[sel.begin() - 1] == '(' and content[sel.begin()] == ')':
-                            m = re.search(r'\(([^\[\(\)]*)', calltips[0])
-                            params = [p.strip() for p in m.group(1).split(',')] if m else None
-                            if params:
-                                snippet = []
-                                _completions = []
-                                for i, p in enumerate(params):
-                                    p = p.strip()
-                                    argname = p.split('=')[0]
-                                    _completions.append((argname + ' (argument)', argname))
-                                    var, _, _ = p.partition('=')
-                                    if ' ' in var:
-                                        var = var.split(' ')[1]
-                                    if var[0] == '$':
-                                        var = var[1:]
-                                    snippetStr = "%s%s" % (('${' + str(i) + '/(.+)/, /}') if i > 1 else '', '${' + str(i) + ':' + var + '}') 
-                                    snippet.append(snippetStr)
-                                completions[id] = _completions
-                                view.run_command('insert_snippet', {'contents': ', '.join(snippet)})
+                                view.run_command('insert_snippet', {'contents': ''.join(snippet)})
             codeintel(view, path, content, lang, pos, forms, _trigger)
     # If it's a fill char, queue using lower values and preemptive behavior
     queue(view, _autocomplete_callback, timeout, busy_timeout, preemptive, args=args, kwargs=kwargs)
@@ -1241,7 +1243,6 @@ class ShowPythonDefinition(sublime_plugin.TextCommand):
         if not lang:
             return
         def _autocomplete_callback(view, path, lang):
-            id = view.id()
             content = view.substr(sublime.Region(0, view.size()))
             sel = view.sel()[0]
             pos = sel.end()
@@ -1251,7 +1252,6 @@ class ShowPythonDefinition(sublime_plugin.TextCommand):
                         # Trigger a tooltip
                         calltip(view, 'tip', calltips[0])
 
-                sentinel[id] = None
                 codeintel(view, path, content, lang, pos, ('cplns', 'calltips'), _trigger)
         _autocomplete_callback(view, path, lang)
         # If it's a fill char, queue using lower values and preemptive behavior
